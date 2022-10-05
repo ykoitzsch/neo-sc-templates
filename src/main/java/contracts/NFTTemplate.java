@@ -73,6 +73,8 @@ public class NFTTemplate {
     private static final byte[] imageBaseUriKey = Helper.toByteArray((byte) 8);
     private static final byte[] currentSupplyKey = Helper.toByteArray((byte) 9);
     private static final byte[] isPausedKey = Helper.toByteArray((byte) 10);
+    private static final byte[] mintPriceKey = Helper.toByteArray((byte) 11);
+    private static final byte[] mintAssetKey = Helper.toByteArray((byte) 12);
 
     // STORAGE MAPS
     private static final StorageMap tokens = new StorageMap(ctx, Helper.toByteArray((byte) 101));
@@ -193,6 +195,16 @@ public class NFTTemplate {
     @Safe
     public static String propertiesJson(ByteString tokenId) throws Exception {
         return new StdLib().jsonSerialize(properties(tokenId));
+    }
+
+    @Safe
+    public static int mintPrice() {
+        return Storage.getInt(ctx.asReadOnly(), mintPriceKey);
+    }
+
+    @Safe
+    public static Hash160 mintAsset() {
+        return new Hash160(Storage.get(ctx.asReadOnly(), mintAssetKey));
     }
 
     /* READ & WRITE */
@@ -361,6 +373,17 @@ public class NFTTemplate {
             }
             Storage.put(ctx, totalSupplyKey, totalSupply);
             Storage.put(ctx, isPausedKey, 1);
+            int mintPrice = (int) arr[3];
+            if (mintPrice <= 0) {
+                throw new Exception("deploy_mintPrice");
+            }
+            Storage.put(ctx, mintPriceKey, mintPrice);
+
+            Hash160 mintAsset = (Hash160) arr[3];
+            if (!Hash160.isValid(mintAsset)) {
+                throw new Exception("deploy_mintAsset");
+            }
+            Storage.put(ctx, mintAssetKey, mintAsset);
         }
     }
 
